@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#f4c995" />
-<title>妞妞小鎮 Niuniu Town v6.3</title>
+<title>妞妞小鎮 Niuniu Town v6.5</title>
 <style>
 :root{--ink:#6d4a2f;--ink-soft:#8f6848;--line:#e7cba7;--panel:#fff9ef;--panel2:#f7ead8;--wood1:#c88856;--wood2:#aa6d44;--wood3:#7c4d30;--shadow:0 14px 32px rgba(93,59,32,.16);--inner:inset 0 2px 0 rgba(255,255,255,.95), inset 0 -2px 0 rgba(223,193,155,.65)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -271,6 +271,121 @@ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:re
   .hint{font-size:10px;min-height:16px;margin-top:6px}
 }
 
+
+html,body{
+  -webkit-text-size-adjust:100%;
+  overscroll-behavior-x:none;
+}
+button,.cell,.tool,.iconbtn{
+  touch-action:manipulation;
+}
+.boardwrap,.board{
+  touch-action:pan-y;
+}
+
+
+.upgrade-route{
+  margin-top:14px;
+  background:linear-gradient(180deg,#fffaf2,#f6e6d2);
+  border:2px solid #e6c79f;
+  border-radius:26px;
+  padding:14px;
+  box-shadow:0 8px 18px rgba(92,58,30,.10),inset 0 1px 0 rgba(255,255,255,.85)
+}
+.route-title{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 4px 12px;
+  color:#744d31;
+  font-weight:1000
+}
+.route-title span{font-size:18px}
+.route-title small{font-size:12px;color:#9a7657;font-weight:800}
+.route-track{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:8px;
+  align-items:stretch
+}
+.route-step{
+  position:relative;
+  min-width:0;
+  padding:10px 5px 8px;
+  border-radius:18px;
+  background:linear-gradient(#f8eee2,#f0dfca);
+  border:1.5px solid #ead1b1;
+  text-align:center;
+  opacity:.42;
+  filter:saturate(.7);
+  transition:.22s ease
+}
+.route-step.unlocked{
+  opacity:1;
+  filter:none;
+  background:linear-gradient(#fffdf8,#f7ead8)
+}
+.route-step.current{
+  outline:3px solid rgba(235,162,85,.48);
+  outline-offset:-3px;
+  box-shadow:0 5px 14px rgba(151,92,48,.12)
+}
+.route-step:not(:last-child)::after{
+  content:"›";
+  position:absolute;
+  right:-9px;
+  top:50%;
+  transform:translateY(-54%);
+  z-index:3;
+  color:#c78e59;
+  font-size:24px;
+  font-weight:1000;
+  text-shadow:0 1px 0 #fff8ee
+}
+.route-img{
+  width:58px;
+  height:58px;
+  object-fit:contain;
+  display:block;
+  margin:0 auto 4px;
+  filter:drop-shadow(0 3px 3px rgba(92,58,30,.10))
+}
+.route-name{
+  display:block;
+  font-size:12px;
+  font-weight:950;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+.route-lock{
+  position:absolute;
+  right:6px;
+  top:5px;
+  font-size:11px;
+  opacity:.8
+}
+.combo-note{
+  display:block;
+  font-size:11px;
+  font-weight:800;
+  color:#9a7657;
+  margin-top:3px
+}
+@media (max-width:720px){
+  .upgrade-route{margin-top:8px;padding:8px;border-radius:18px}
+  .route-title{margin:0 2px 7px;align-items:center}
+  .route-title span{font-size:12px}
+  .route-title small{font-size:9px}
+  .route-track{gap:4px}
+  .route-step{padding:6px 2px 5px;border-radius:12px}
+  .route-img{width:34px;height:34px;margin-bottom:2px}
+  .route-name{font-size:8px}
+  .route-lock{right:3px;top:2px;font-size:8px}
+  .route-step:not(:last-child)::after{right:-5px;font-size:14px}
+}
+
 </style>
 </head>
 <body>
@@ -285,7 +400,7 @@ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:re
     <div class="status">
       <div class="stats">
         <div class="stat"><span>⭐ 分數</span><b id="score">0</b></div>
-        <div class="stat"><span>🔥 最高連鎖</span><b id="bestCombo">0</b></div>
+        <div class="stat"><span>🔥 最高連鎖</span><b id="bestCombo">0</b><small class="combo-note">×4、×5 有額外獎勵</small></div>
       </div>
       <div class="card next-card next-card-top"><small>下一個</small><div class="next-item" id="nextItem"></div><small id="nextName">草地</small></div>
       <div class="goal">🎯 目標：蓋出第一棟妞妞豪宅 <b id="goalCount">0/1</b></div>
@@ -310,6 +425,14 @@ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:re
     </button>
   </section>
   <div class="hint" id="hint">點一個空格，放下草地吧！</div>
+
+  <section class="upgrade-route" aria-label="小鎮升級路線">
+    <div class="route-title">
+      <span>🏘️ 小鎮升級路線</span>
+      <small>3 個相同物件可升級下一階</small>
+    </div>
+    <div class="route-track" id="upgradeRoute"></div>
+  </section>
   <div class="legend"></div>
 </div>
 <div class="toast" id="toast"></div>
@@ -339,14 +462,14 @@ const WIN_HOUSE=ITEMS.find(item=>item.name==='妞妞豪宅');
 const winHouseIconEl=document.getElementById('winHouseIcon');
 if(WIN_HOUSE&&winHouseIconEl){winHouseIconEl.src=WIN_HOUSE.img;}
 
-const N=6,SAVE_KEY='niuniu-town-v6_3-save';
-let state={board:Array(N*N).fill(null),score:0,bestCombo:0,next:0,tools:{wild:3,clear:3,move:2},sound:true,music:true,won:false,mansionCount:0,stage:0,townLevel:1,ballDry:0};
+const N=6,SAVE_KEY='niuniu-town-v6_5-save';
+let state={board:Array(N*N).fill(null),score:0,bestCombo:0,next:0,tools:{wild:3,clear:3,move:2},sound:true,music:true,won:false,mansionCount:0,stage:0,townLevel:1,ballDry:0,maxUnlocked:0};
 let activeTool=null,moveSource=null,audioCtx=null,bgmTimer=null,bgmStep=0,lastPlaced=-1,lastMerged=-1;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const boardEl=$('#board'),scoreEl=$('#score'),bestComboEl=$('#bestCombo'),nextItemEl=$('#nextItem'),nextNameEl=$('#nextName'),hintEl=$('#hint');
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state))}
-function load(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&Array.isArray(s.board)&&s.board.length===36){state={...state,...s,tools:{...state.tools,...(s.tools||{})},music:s.music!==false,mansionCount:s.mansionCount||0,stage:s.stage||0,townLevel:s.townLevel||1,ballDry:s.ballDry||0};return true}}catch(e){}return false}
-function fresh(){const keepSound=state.sound,keepMusic=state.music;stopBgm();state={board:Array(36).fill(null),score:0,bestCombo:0,next:0,tools:{wild:3,clear:3,move:2},sound:keepSound,music:keepMusic,won:false,mansionCount:0,stage:0,townLevel:1,ballDry:0};activeTool=null;moveSource=null;lastPlaced=-1;lastMerged=-1;rollNext();save();render();if(state.music)startBgm()}
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&Array.isArray(s.board)&&s.board.length===36){state={...state,...s,tools:{...state.tools,...(s.tools||{})},music:s.music!==false,mansionCount:s.mansionCount||0,stage:s.stage||0,townLevel:s.townLevel||1,ballDry:s.ballDry||0,maxUnlocked:Number.isInteger(s.maxUnlocked)?s.maxUnlocked:0};return true}}catch(e){}return false}
+function fresh(){const keepSound=state.sound,keepMusic=state.music;stopBgm();state={board:Array(36).fill(null),score:0,bestCombo:0,next:0,tools:{wild:3,clear:3,move:2},sound:keepSound,music:keepMusic,won:false,mansionCount:0,stage:0,townLevel:1,ballDry:0,maxUnlocked:0};activeTool=null;moveSource=null;lastPlaced=-1;lastMerged=-1;rollNext();save();render();if(state.music)startBgm()}
 function neighbors(i){const r=Math.floor(i/N),c=i%N,a=[];if(r>0)a.push(i-N);if(r<N-1)a.push(i+N);if(c>0)a.push(i-1);if(c<N-1)a.push(i+1);return a}
 function component(start,level){const seen=new Set([start]),q=[start];while(q.length){const i=q.shift();for(const n of neighbors(i))if(!seen.has(n)&&state.board[n]===level){seen.add(n);q.push(n)}}return [...seen]}
 function rollNext(){
@@ -375,6 +498,7 @@ function rollNext(){
   }
 
   state.next=level;
+  state.maxUnlocked=Math.max(state.maxUnlocked||0,level);
 }
 function scoreFor(level,count,chain){const base=ITEMS[Math.min(level,5)].score;const qty=count>=5?2:count===4?1.5:1;const ch=chain>=4?2:chain===3?1.5:chain===2?1.2:1;return Math.round(base*qty*ch)}
 
@@ -425,11 +549,28 @@ function advanceStage(){
 function archiveMansion(i){
   if(state.board[i]!==5)return;
   state.board[i]=null;
+  state.maxUnlocked=Math.max(state.maxUnlocked||0,5);
   toast(`🏡 豪宅收藏進小鎮！目前 ${state.mansionCount} 棟`);
   beep('archive');
   vibrate([24,18,34]);
   save(); render();
   checkGameOver();
+}
+
+
+function handleComboReward(chain){
+  if(chain===4){
+    state.tools.clear++;
+    toast('🔥 COMBO ×4！獎勵：清除 +1');
+    beep('win');
+    vibrate([25,20,45]);
+  }else if(chain>=5){
+    state.tools.wild++;
+    state.tools.move++;
+    toast('🌟 COMBO ×5！獎勵：萬能爪 +1、移動 +1');
+    beep('win');
+    vibrate([30,20,50,20,70]);
+  }
 }
 
 function mergeFrom(anchor,level,chain=1){
@@ -438,6 +579,7 @@ const comp=component(anchor,level);
 if(comp.length<3)return chain-1;
 comp.forEach(i=>{if(i!==anchor)state.board[i]=null});
 state.board[anchor]=level+1;
+state.maxUnlocked=Math.max(state.maxUnlocked||0,level+1);
 lastMerged=anchor;
 state.score+=scoreFor(level+1,comp.length,chain);
 beep('merge',chain);
@@ -454,9 +596,9 @@ if(level+1===5){
 }
 return mergeFrom(anchor,level+1,chain+1)
 }
-function place(i,level){if(state.board[i]!==null)return;state.board[i]=level;lastPlaced=i;state.score+=ITEMS[level].score;beep('place');vibrate(12);const chain=mergeFrom(i,level,1);state.bestCombo=Math.max(state.bestCombo,chain);rollNext();activeTool=null;moveSource=null;save();render();advanceStage();checkGameOver()}
+function place(i,level){if(state.board[i]!==null)return;state.board[i]=level;lastPlaced=i;state.score+=ITEMS[level].score;beep('place');vibrate(12);const chain=mergeFrom(i,level,1);state.bestCombo=Math.max(state.bestCombo,chain);handleComboReward(chain);rollNext();activeTool=null;moveSource=null;save();render();advanceStage();checkGameOver()}
 function useWild(i){if(state.tools.wild<=0)return toast('萬能爪用完囉！');if(state.board[i]!==null)return toast('萬能爪要放在空格喔');let counts={};for(const n of neighbors(i)){const lv=state.board[n];if(Number.isInteger(lv)&&lv<5)counts[lv]=(counts[lv]||0)+1}
-const candidates=Object.entries(counts).filter(([,c])=>c>=2).sort((a,b)=>b[0]-a[0]);if(!candidates.length)return toast('旁邊至少要有 2 個相同物件');const level=+candidates[0][0];state.tools.wild--;state.board[i]=level;state.score+=ITEMS[level].score;const chain=mergeFrom(i,level,1);state.bestCombo=Math.max(state.bestCombo,chain);activeTool=null;save();render();advanceStage();checkGameOver()}
+const candidates=Object.entries(counts).filter(([,c])=>c>=2).sort((a,b)=>b[0]-a[0]);if(!candidates.length)return toast('旁邊至少要有 2 個相同物件');const level=+candidates[0][0];state.tools.wild--;state.board[i]=level;state.score+=ITEMS[level].score;const chain=mergeFrom(i,level,1);state.bestCombo=Math.max(state.bestCombo,chain);handleComboReward(chain);activeTool=null;save();render();advanceStage();checkGameOver()}
 function useClear(i){if(state.tools.clear<=0)return toast('清除道具用完囉！');if(state.board[i]===null)return toast('這格是空的');if(state.board[i]===5)return toast('豪宅不能掃掉啦 😂');state.board[i]=null;state.tools.clear--;state.score=Math.max(0,state.score-20);beep('clear');vibrate(18);activeTool=null;save();render();advanceStage()}
 function useMove(i){if(state.tools.move<=0)return toast('移動道具用完囉！');if(moveSource===null){if(state.board[i]===null)return toast('先點一個要搬的物件');moveSource=i;renderBoard();hintEl.textContent='再點一個空格，把它搬過去';return}
 if(state.board[i]!==null)return toast('目的地要是空格');const lv=state.board[moveSource];state.board[i]=lv;state.board[moveSource]=null;state.tools.move--;moveSource=null;activeTool=null;const chain=mergeFrom(i,lv,1);state.bestCombo=Math.max(state.bestCombo,chain);beep('move');save();render();advanceStage();checkGameOver()}
@@ -486,6 +628,24 @@ state.board.forEach((lv,i)=>{
 });
 lastPlaced=-1;lastMerged=-1
 }
+
+function renderUpgradeRoute(){
+  const route=document.getElementById('upgradeRoute');
+  if(!route)return;
+  const boardMax=state.board.reduce((m,v)=>Number.isInteger(v)?Math.max(m,v):m,0);
+  const maxUnlocked=Math.max(state.maxUnlocked||0,boardMax,(state.mansionCount||0)>0?5:0);
+  state.maxUnlocked=maxUnlocked;
+  route.innerHTML=ITEMS.map((item,i)=>{
+    const unlocked=i<=maxUnlocked;
+    const current=i===maxUnlocked;
+    return `<div class="route-step ${unlocked?'unlocked':''} ${current?'current':''}">
+      ${unlocked?'':`<span class="route-lock">🔒</span>`}
+      <img class="route-img" src="${item.img}" alt="${item.name}">
+      <span class="route-name">${item.name}</span>
+    </div>`;
+  }).join('');
+}
+
 function render(){
 renderBoard();
 scoreEl.textContent=state.score.toLocaleString();
@@ -501,6 +661,7 @@ $('#progressBar').style.width=`${Math.min(100,Math.round((g.cur/g.target)*100))}
 $('#soundBtn').textContent=state.sound?'🔊':'🔇';
 $('#musicBtn').textContent=state.music?'🎵':'🚫';
 $('#musicBtn').style.opacity=state.music?'1':'.42';
+renderUpgradeRoute();
 $$('.tool').forEach(x=>x.classList.toggle('active',x.dataset.tool===activeTool));
 if(!activeTool)hintEl.textContent=`點一個空格，放下${ITEMS[state.next].name}吧！`;
 else if(activeTool==='wild')hintEl.textContent='萬能爪：點在至少鄰接 2 個相同物件的空格';
@@ -583,5 +744,35 @@ $('#startBtn').onclick=()=>{ensureAudio();$('#startModal').classList.remove('sho
 const had=load();if(!had)rollNext();render();$('#startModal').classList.add('show');
 })();
 </script>
+
+<script>
+(function(){
+  let lastTouchEnd = 0;
+
+  // Prevent double-tap zoom on iOS while keeping normal single taps.
+  document.addEventListener('touchend', function(e){
+    const now = Date.now();
+    if(now - lastTouchEnd <= 300){
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, {passive:false});
+
+  // Prevent pinch-to-zoom during gameplay.
+  document.addEventListener('touchmove', function(e){
+    if(e.touches && e.touches.length > 1){
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  // Safari gesture events.
+  ['gesturestart','gesturechange','gestureend'].forEach(function(type){
+    document.addEventListener(type, function(e){
+      e.preventDefault();
+    }, {passive:false});
+  });
+})();
+</script>
+
 </body>
 </html>
