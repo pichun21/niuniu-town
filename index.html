@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#f4c995" />
-<title>妞妞小鎮 Niuniu Town v10.26 BETA｜關卡切換測試版</title>
+<title>妞妞小鎮 Niuniu Town v10.27 BETA｜關卡切換測試版</title>
 <style>
 :root{--ink:#6d4a2f;--ink-soft:#8f6848;--line:#e7cba7;--panel:#fff9ef;--panel2:#f7ead8;--wood1:#c88856;--wood2:#aa6d44;--wood3:#7c4d30;--shadow:0 14px 32px rgba(93,59,32,.16);--inner:inset 0 2px 0 rgba(255,255,255,.95), inset 0 -2px 0 rgba(223,193,155,.65)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -944,7 +944,7 @@ button,.cell,.tool,.iconbtn{
 /* v10.14：第二關遊戲內導覽 */
 .stage2-tour{
   position:fixed;inset:0;z-index:9999;display:none;
-  pointer-events:none;
+  pointer-events:auto;
 }
 .stage2-tour.show{display:block}
 .stage2-tour .tour-shade{
@@ -1402,10 +1402,10 @@ function milestone(title,body,reward,artSrc=WIN_MODAL_IMG){
 }
 function advanceStage(){
   let advanced=false;
-  if(state.stage===0 && state.mansionCount>=1){
-    state.stage=1; state.townLevel=2;
-    ensureStage2Setup();
-    milestone('🎉 第 1 關完成！','第一棟妞妞豪宅完成啦！下一關：妞妞睡午覺｜睡覺中的妞妞會占住格子，用鬧鐘叫醒她們；豪宅累積達到 3 棟。','');
+  if(state.stage===0 && state.mansionCount>=1 && !state.pendingStage2Start){
+    state.pendingStage2Start=true;
+    milestone('🎉 第 1 關完成！','第一棟妞妞豪宅完成啦！分數先幫你保留下來，準備好後再前往第 2 關。','');
+    $('#continueBtn').textContent='前往第 2 關';
     advanced=true;
   }else if(state.stage===1 && state.mansionCount>=3 && Array.isArray(state.sleepers) && state.sleepers.length>0){
     toast(`🏡 豪宅完成！還有 ${state.sleepers.length} 隻妞妞在睡覺`);
@@ -2008,7 +2008,7 @@ function resetForStage(stageNo){
       eventSteps:0,mergeStreak:0,bestMergeStreak:0,doubleScoreMoves:0,
       sleepers:[],sleepersInitialized:false,stage2Woken:0,
       stage2ComboClockGranted:false,stage2MansionClockGranted:false,
-      stage2Combo2Count:0,stage2TourSeen:false
+      stage2Combo2Count:0,stage2TourSeen:false,pendingStage2Start:false
     };
   }else{
     state={
@@ -2020,7 +2020,7 @@ function resetForStage(stageNo){
       eventSteps:0,mergeStreak:0,bestMergeStreak:0,doubleScoreMoves:0,
       sleepers:[],sleepersInitialized:false,stage2Woken:0,
       stage2ComboClockGranted:false,stage2MansionClockGranted:false,
-      stage2Combo2Count:0,stage2TourSeen:false
+      stage2Combo2Count:0,stage2TourSeen:false,pendingStage2Start:false
     };
   }
 
@@ -2038,7 +2038,14 @@ function resetForStage(stageNo){
     // 測試版：切回／重新開始第 1 關時，重新顯示基本玩法。
     setTimeout(()=>$('#startModal').classList.add('show'),120);
   }else if(stageNo===1){
-    setTimeout(()=>startStage2Tour(true),260);
+    state.stage2TourSeen=true;
+    save();
+    render();
+    setTimeout(()=>{
+      state.stage2TourSeen=false;
+      save();
+      startStage2Tour(true);
+    },260);
   }
 
   if(state.music)startBgm();
@@ -2271,7 +2278,43 @@ if(replayStage2TourBtn){
   };
 }
 
-$('#continueBtn').onclick=()=>{$('#winModal').classList.remove('show');ensureAudio();if(state.stage!==2)advanceStage();render()};
+$('#continueBtn').onclick=()=>{
+  ensureAudio();
+
+  if(state.pendingStage2Start){
+    // 先關掉第一關過關畫面，再真正進入第二關。
+    $('#winModal').classList.remove('show');
+
+    state.pendingStage2Start=false;
+    state.stage=1;
+    state.townLevel=2;
+
+    // 每一關重新給基本道具；第二關另外有 1 個叫醒鬧鐘。
+    state.tools={wild:3,clear:3,move:2,wake:1};
+
+    state.sleepers=[];
+    state.sleepersInitialized=false;
+    state.stage2Woken=0;
+    state.stage2ComboClockGranted=false;
+    state.stage2MansionClockGranted=false;
+    state.stage2Combo2Count=0;
+    state.stage2TourSeen=false;
+
+    activeTool=null;
+    moveSource=null;
+    ensureStage2Setup();
+    save();
+    render();
+
+    // 確定過關畫面完全消失、第二關畫面就緒後再出現導覽。
+    setTimeout(()=>startStage2Tour(true),320);
+    return;
+  }
+
+  $('#winModal').classList.remove('show');
+  if(state.stage!==2)advanceStage();
+  render();
+};
 $('#newAfterWin').onclick=()=>{$('#winModal').classList.remove('show');fresh()};
 $('#restartBtn').onclick=()=>{$('#gameoverModal').classList.remove('show');fresh()};
 $('#restartTopBtn').onclick=()=>{
@@ -2298,7 +2341,14 @@ $('#helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')$('#he
 $('#freshStart').onclick=()=>{ensureAudio();fresh();$('#startModal').classList.remove('show');if(state.sound)beep('place');if(state.music)startBgm()};
 $('#startBtn').onclick=()=>{ensureAudio();$('#startModal').classList.remove('show');if(state.sound)beep('place');if(state.music)startBgm()};
 const had=load();if(!had)rollNext();render();
-if(state.stage===0)setTimeout(()=>$('#startModal').classList.add('show'),180);
+if(state.pendingStage2Start){
+  setTimeout(()=>{
+    milestone('🎉 第 1 關完成！','第一棟妞妞豪宅完成啦！分數先幫你保留下來，準備好後再前往第 2 關。','');
+    $('#continueBtn').textContent='前往第 2 關';
+  },180);
+}else if(state.stage===0){
+  setTimeout(()=>$('#startModal').classList.add('show'),180);
+}
 })();
 </script>
 
