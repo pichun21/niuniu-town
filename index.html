@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#f4c995" />
-<title>妞妞小鎮 Niuniu Town v10.25 BETA｜關卡切換測試版</title>
+<title>妞妞小鎮 Niuniu Town v10.26 BETA｜關卡切換測試版</title>
 <style>
 :root{--ink:#6d4a2f;--ink-soft:#8f6848;--line:#e7cba7;--panel:#fff9ef;--panel2:#f7ead8;--wood1:#c88856;--wood2:#aa6d44;--wood3:#7c4d30;--shadow:0 14px 32px rgba(93,59,32,.16);--inner:inset 0 2px 0 rgba(255,255,255,.95), inset 0 -2px 0 rgba(223,193,155,.65)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1591,8 +1591,66 @@ render();
 advanceStage();
 checkGameOver()
 }
-function useWild(i){wakeAlarmGrantedThisTurn=false;currentMoveMultiplier=1;if(isSleeper(i))return toast('妞妞正在睡覺，這格不能用萬能爪');if(state.tools.wild<=0)return toast('萬能爪用完囉！');if(state.board[i]!==null)return toast('萬能爪要放在空格喔');let counts={};for(const n of neighbors8(i)){const lv=state.board[n];if(Number.isInteger(lv)&&lv<5)counts[lv]=(counts[lv]||0)+1}
-const candidates=Object.entries(counts).filter(([,c])=>c>=2).sort((a,b)=>b[0]-a[0]);if(!candidates.length)return toast('旁邊至少要有 2 個相同物件');const level=+candidates[0][0];state.tools.wild--;state.board[i]=level;state.score+=ITEMS[level].score;const chain=mergeFrom(i,level,1);state.bestChain=Math.max(state.bestChain||0,chain);handleComboReward(chain);activeTool=null;save();render();advanceStage();checkGameOver()}
+function useWild(i){
+wakeAlarmGrantedThisTurn=false;
+currentMoveMultiplier=1;
+if(isSleeper(i))return toast('妞妞正在睡覺，這格不能用萬能爪');
+if(state.tools.wild<=0)return toast('萬能爪用完囉！');
+if(state.board[i]!==null)return toast('萬能爪要放在空格喔');
+
+let groups={};
+for(const n of neighbors8(i)){
+  const lv=state.board[n];
+  if(Number.isInteger(lv)&&lv<5){
+    if(!groups[lv])groups[lv]=[];
+    groups[lv].push(n);
+  }
+}
+const candidates=Object.entries(groups)
+  .filter(([,arr])=>arr.length>=2)
+  .sort((a,b)=>Number(b[0])-Number(a[0]));
+
+if(!candidates.length)return toast('旁邊至少要有 2 個相同物件');
+
+const level=Number(candidates[0][0]);
+const matched=candidates[0][1];
+
+state.tools.wild--;
+
+// 萬能爪本身視為第 3 個素材：
+// 周圍符合條件的同級素材全部消失，萬能爪位置直接生成下一級。
+matched.forEach(idx=>{ state.board[idx]=null; });
+state.board[i]=level+1;
+state.maxUnlocked=Math.max(state.maxUnlocked||0,level+1);
+lastPlaced=i;
+lastMerged=i;
+state.score+=gainScore(scoreFor(level+1,matched.length+1,1));
+
+beep('merge',1);
+vibrate(12);
+renderBoard(true);
+
+// 若萬能爪直接做出豪宅，沿用豪宅收藏流程；
+// 否則從新生成的下一級物件繼續檢查連鎖合成。
+let chain=1;
+if(level+1===5){
+  state.mansionCount=(state.mansionCount||0)+1;
+  state.won=true;
+  save();
+  setTimeout(()=>archiveMansion(i),850);
+  setTimeout(()=>advanceStage(),980);
+}else{
+  chain=mergeFrom(i,level+1,2);
+}
+
+state.bestChain=Math.max(state.bestChain||0,chain);
+handleComboReward(chain);
+activeTool=null;
+save();
+render();
+advanceStage();
+checkGameOver();
+}
 function useClear(i){if(isSleeper(i))return toast('妞妞睡著了，要用鬧鐘叫醒她喔');if(state.tools.clear<=0)return toast('清除道具用完囉！');if(state.board[i]===null)return toast('這格是空的');if(state.board[i]===5)return toast('豪宅不能掃掉啦 😂');state.board[i]=null;state.tools.clear--;state.score=Math.max(0,state.score-20);beep('clear');vibrate(18);activeTool=null;save();render();advanceStage()}
 function movePiece(source,dest){
 wakeAlarmGrantedThisTurn=false;
@@ -2240,7 +2298,7 @@ $('#helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')$('#he
 $('#freshStart').onclick=()=>{ensureAudio();fresh();$('#startModal').classList.remove('show');if(state.sound)beep('place');if(state.music)startBgm()};
 $('#startBtn').onclick=()=>{ensureAudio();$('#startModal').classList.remove('show');if(state.sound)beep('place');if(state.music)startBgm()};
 const had=load();if(!had)rollNext();render();
-if(!had && state.stage===0)setTimeout(()=>$('#startModal').classList.add('show'),120);
+if(state.stage===0)setTimeout(()=>$('#startModal').classList.add('show'),180);
 })();
 </script>
 
