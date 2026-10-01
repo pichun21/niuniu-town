@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#f4c995" />
-<title>妞妞小鎮 Niuniu Town v10.27 BETA｜關卡切換測試版</title>
+<title>妞妞小鎮 Niuniu Town v10.29 BETA｜卡片醒目版</title>
 <style>
 :root{--ink:#6d4a2f;--ink-soft:#8f6848;--line:#e7cba7;--panel:#fff9ef;--panel2:#f7ead8;--wood1:#c88856;--wood2:#aa6d44;--wood3:#7c4d30;--shadow:0 14px 32px rgba(93,59,32,.16);--inner:inset 0 2px 0 rgba(255,255,255,.95), inset 0 -2px 0 rgba(223,193,155,.65)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -79,9 +79,12 @@ align-self:center;
 justify-self:start
 }
 
-.goal{width:100%;background:rgba(255,253,249,.78);border:1.5px solid #ecd7bb;border-radius:18px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px;font-weight:950;box-shadow:inset 0 1px 0 rgba(255,255,255,.86);color:#765035}
-.goal .goal-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.goal .goal-count{flex:0 0 auto;min-width:48px;padding:4px 9px;border-radius:999px;background:#f5e6d2;border:1px solid #e7c8a3;text-align:center;font-size:14px;font-weight:1000;color:#7b5337}
+.goal{width:100%;background:rgba(255,253,249,.78);border:1.5px solid #ecd7bb;border-radius:18px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px;font-weight:950;box-shadow:inset 0 1px 0 rgba(255,255,255,.86);color:#765035}
+.goal .goal-label{min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;overflow:visible;white-space:normal;line-height:1.22}
+.goal .goal-stage-name{display:block;font-size:17px;font-weight:1000;letter-spacing:.2px}
+.goal .goal-meta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px;font-weight:950;color:#7c5538}
+.goal .goal-chip{display:inline-flex;align-items:center;gap:4px}
+.goal .goal-count{flex:0 0 auto;min-width:62px;padding:5px 10px;border-radius:999px;background:#f5e6d2;border:1px solid #e7c8a3;text-align:center;font-size:14px;font-weight:1000;color:#7b5337}
 .progress{height:16px;background:#e5d1b6;border-radius:999px;margin-top:14px;overflow:hidden;box-shadow:inset 0 2px 3px rgba(109,74,47,.12)}
 .progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f5c96d,#eca055);border-radius:inherit;transition:.3s}
 .boardwrap{
@@ -215,13 +218,17 @@ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:re
   .goal{
     width:100%;
     min-width:0;
-    border-radius:13px;
-    padding:6px 8px;
-    font-size:9.5px;
-    gap:6px
+    border-radius:15px;
+    padding:10px 12px;
+    font-size:14px;
+    gap:8px;
+    align-items:center
   }
-  .goal .goal-label{min-width:0}
-  .goal .goal-count{min-width:34px;padding:2px 6px;font-size:9px}
+  .goal .goal-label{min-width:0;gap:5px}
+  .goal .goal-stage-name{font-size:16px;line-height:1.15}
+  .goal .goal-meta{font-size:14px;gap:5px 10px;line-height:1.2}
+  .goal .goal-chip{white-space:nowrap}
+  .goal .goal-count{min-width:56px;padding:4px 8px;font-size:13px}
   .progress{height:8px;margin-top:6px}
 
 
@@ -746,22 +753,53 @@ button,.cell,.tool,.iconbtn{
 }
 .card.next-card-top .next-asset{position:relative;z-index:1;width:72px;height:72px}
 .goal{
-  background:linear-gradient(180deg,#f6d59e 0%,#e8bb79 100%);
-  border:2px solid #b97942;
-  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:linear-gradient(180deg,#fff7e9 0%,#f7ddb0 100%);
+  border:2px solid #c98b4f;
+  border-radius:22px;
   color:#6f452b;
   box-shadow:
-    inset 0 2px 0 rgba(255,241,215,.75),
-    inset 0 -3px 0 rgba(147,89,43,.12),
-    0 4px 8px rgba(98,58,31,.10);
-  padding:10px 12px 10px 14px;
+    inset 0 2px 0 rgba(255,252,244,.9),
+    inset 0 -4px 0 rgba(163,103,54,.12),
+    0 5px 10px rgba(98,58,31,.10);
+  padding:12px 14px;
 }
 .goal::before{display:none}
-.goal .goal-label{font-weight:1000;text-shadow:0 1px 0 rgba(255,246,224,.6)}
+.goal .goal-label{font-weight:1000;text-shadow:0 1px 0 rgba(255,246,224,.6);gap:8px}
+.goal .goal-stage-name{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 12px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#ffe8bc,#f6c97f);
+  border:1.5px solid #d79a59;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.88),0 1px 0 rgba(169,110,59,.10);
+  color:#7a4d2f;
+  font-size:18px;
+  line-height:1.15;
+}
+.goal .goal-meta{gap:8px 10px}
+.goal .goal-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(255,251,244,.92);
+  border:1.5px solid #e7c597;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+  font-size:15px;
+}
 .goal .goal-count{
+  min-width:72px;
+  padding:8px 12px;
   background:linear-gradient(180deg,#fff4df,#f2d7b0);
   border:2px solid #b97942;
   color:#74472b;
+  font-size:15px;
   box-shadow:inset 0 2px 0 rgba(255,255,255,.85),0 2px 0 rgba(130,77,36,.12);
 }
 .progress{
@@ -780,9 +818,12 @@ button,.cell,.tool,.iconbtn{
   .card.next-card-top > small:first-child{font-size:13px}
   .card.next-card-top .next-item::before{width:62px;height:50px;border-radius:15px}
   .card.next-card-top .next-asset{width:52px;height:52px}
-  .goal{border-radius:14px;padding:7px 7px 7px 10px}
-  .goal .goal-label{font-size:10px}
-  .goal .goal-count{min-width:34px;padding:3px 6px;font-size:9px}
+  .goal{border-radius:18px;padding:10px 11px;gap:9px}
+  .goal .goal-label{font-size:12px;gap:6px}
+  .goal .goal-stage-name{font-size:15px;padding:5px 10px}
+  .goal .goal-meta{font-size:13px;gap:6px 8px;line-height:1.2}
+  .goal .goal-chip{padding:4px 8px;font-size:13px}
+  .goal .goal-count{min-width:56px;padding:5px 8px;font-size:12px}
   .progress{height:4px;margin-top:7px;border:0}
 }
 
@@ -2093,9 +2134,9 @@ $('.controls').classList.toggle('has-wake',state.stage===1);
 const g=goalInfo(),st=stageInfo();
 if(state.stage===1){
   const awake=Math.min(3,state.stage2Woken||0);
-  $('.goal').innerHTML=`<span class="goal-label"><span class="goal-stage-name">第 2 關｜妞妞睡午覺</span>　🏡 豪宅 ${Math.min(state.mansionCount,3)}/3　⏰ 叫醒妞妞 ${awake}/3</span><b class="goal-count" id="goalCount">${(state.mansionCount>=3 && awake>=3)?'完成':'進行中'}</b>`;
+  $('.goal').innerHTML=`<span class="goal-label"><span class="goal-stage-name">第 2 關｜妞妞睡午覺</span><span class="goal-meta"><span class="goal-chip">🏡 豪宅 ${Math.min(state.mansionCount,3)}/3</span><span class="goal-chip">⏰ 叫醒妞妞 ${awake}/3</span></span></span><b class="goal-count" id="goalCount">${(state.mansionCount>=3 && awake>=3)?'完成':'進行中'}</b>`;
 }else{
-  $('.goal').innerHTML=`<span class="goal-label"><span class="goal-stage-name">第 ${st.no} 關｜${st.name}</span>　${g.label}</span><b class="goal-count" id="goalCount">${Math.min(g.cur,g.target)}/${g.target}</b>`;
+  $('.goal').innerHTML=`<span class="goal-label"><span class="goal-stage-name">第 ${st.no} 關｜${st.name}</span><span class="goal-meta"><span class="goal-chip">${g.label}</span></span></span><b class="goal-count" id="goalCount">${Math.min(g.cur,g.target)}/${g.target}</b>`;
 }
 
 // 第一階段原本是 0/1 豪宅，所以進度條只會從 0% 突然跳到 100%。
