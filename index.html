@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#f4c995" />
-<title>妞妞小鎮 Niuniu Town v10.29 BETA｜卡片醒目版</title>
+<title>妞妞小鎮 Niuniu Town v10.31 BETA｜關卡切換啟動修正</title>
 <style>
 :root{--ink:#6d4a2f;--ink-soft:#8f6848;--line:#e7cba7;--panel:#fff9ef;--panel2:#f7ead8;--wood1:#c88856;--wood2:#aa6d44;--wood3:#7c4d30;--shadow:0 14px 32px rgba(93,59,32,.16);--inner:inset 0 2px 0 rgba(255,255,255,.95), inset 0 -2px 0 rgba(223,193,155,.65)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -934,13 +934,16 @@ button,.cell,.tool,.iconbtn{
 /* v10.7：第二關「妞妞睡午覺」 */
 .controls.has-wake{grid-template-columns:repeat(4,1fr)}
 .wake-tool[hidden]{display:none!important}
-.sleeper-cell{cursor:not-allowed}
+.sleeper-cell{cursor:pointer}
 .sleeper-cell .sleep-tile{
   width:96%;height:96%;display:grid;place-items:center;
   filter:drop-shadow(0 4px 4px rgba(92,58,30,.12));
 }
 .sleeper-cell .sleep-tile img{
   width:100%;height:100%;object-fit:contain;display:block;
+  pointer-events:none;
+  -webkit-user-drag:none;
+  user-select:none;
 }
 .sleeper-cell:after{
   content:"";
@@ -2442,6 +2445,18 @@ if(state.pendingStage2Start){
   <button type="button" data-stage="0">第 1 關</button>
   <button type="button" data-stage="1">第 2 關</button>
 </div>
+
+
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    if(typeof initStageSwitcher==='function'){
+      initStageSwitcher();
+      updateStageSwitcher();
+    }
+  },0);
+});
+</script>
 
 </body>
 </html>
