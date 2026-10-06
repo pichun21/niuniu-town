@@ -1278,7 +1278,7 @@ button,.cell,.tool,.iconbtn{
 .cell.stage5-deliver{animation:stage5Deliver .48s ease-in forwards;z-index:20}
 @keyframes stage5Deliver{0%{transform:scale(1);opacity:1}55%{transform:scale(1.12) translateY(-7px);opacity:1}100%{transform:scale(.55) translateY(-34px);opacity:0}}
 @media(max-width:720px){.goal.stage5-goal .order-main img{width:24px;height:24px}}
-/* v10.52：第 6 關難度調整｜開場不送任務物件＋4 次移動＋依序搬家 */
+/* v10.53：第 6 關完整導覽＋實際搬家玩法｜首次開啟從第 1 關 */
 .cell.stage6-target{outline:3px solid rgba(177,133,82,.70);outline-offset:-4px;background-color:rgba(255,247,229,.80)}
 .cell.stage6-target::after{content:"";position:absolute;inset:7px;border:2px dashed rgba(183,139,86,.58);border-radius:12px;pointer-events:none}
 .cell.stage6-target.stage6-done{outline-color:#7fa967;background-color:rgba(225,241,209,.55)}
@@ -1478,7 +1478,7 @@ const WIN_MODAL_IMG='data:image/webp;base64,UklGRhx7AABXRUJQVlA4WAoAAAAQAAAAowEA
 const winHouseIconEl=document.getElementById('winHouseIcon');
 if(winHouseIconEl){winHouseIconEl.src=WIN_MODAL_IMG;}
 
-const N=6,SAVE_KEY='niuniu-town-v7_8-save';
+const N=6,SAVE_KEY='niuniu-town-v10_53-save';
 let state={board:Array(N*N).fill(null),score:0,bestCombo:0,bestChain:0,next:0,tools:{wild:3,clear:3,move:2,wake:1},sound:true,music:true,won:false,mansionCount:0,stage:0,townLevel:1,ballDry:0,maxUnlocked:0,eventSteps:0,mergeStreak:0,bestMergeStreak:0,doubleScoreMoves:0,sleepers:[],sleepersInitialized:false,stage2Woken:0,stage2ComboClockGranted:false,stage2MansionClockGranted:false,stage2Combo2Count:0,stage2TourSeen:false,pendingStage2Start:false,pendingStage3Start:false,pendingStage4Start:false,stage3Sites:[],stage3SiteTargets:[],stage3CompletedSites:[],stage3SitesInitialized:false,stage3TourSeen:false,stage4CartPos:null,stage4CartInitialized:false,stage4CartFixed:false,stage4CartRemoved:false,stage4Built:0,stage4Done:false,stage4TourSeen:false,stage4FirstMansionBroomGranted:false,pendingStage5Start:false,stage5OrderIndex:0,stage5OrderDelivered:0,stage5StepsLeft:7,stage5Done:false,stage5TourSeen:false,stage5Failing:false,pendingStage5Start:false,stage5OrderIndex:0,stage5OrderDelivered:0,stage5StepsLeft:7,stage5Done:false,stage5TourSeen:false,stage5Failing:false,stage5Delivering:false,pendingStage6Start:false,stage6Targets:[],stage6Initialized:false,stage6Done:false,stage6TourSeen:false};
 let activeTool=null,moveSource=null,audioCtx=null,bgmTimer=null,bgmStep=0,lastPlaced=-1,lastMerged=-1,currentMoveMultiplier=1,wakeAlarmGrantedThisTurn=false,moveDrag={active:false,source:null,pointerId:null,startX:0,startY:0,moved:false,over:null},suppressCellClickUntil=0;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1999,6 +1999,7 @@ if(level+1===5){
 return mergeFrom(anchor,level+1,chain+1)
 }
 function place(i,level){
+if(state.stage===5 && isStage6Target(i))return toast('📦 搬家格只能用「移動」把完成物件搬進去');
 if(state.board[i]!==null)return;
 wakeAlarmGrantedThisTurn=false;
 currentMoveMultiplier=1;
@@ -2514,6 +2515,25 @@ function startStage5Tour(force=false){initStage5Tour();if(state.stage!==4)return
 function closeStage5Tour(markSeen=true){const t=$('#stage5Tour');if(!t)return;clearStage5TourFocus();stage5TourActive=false;t.classList.remove('show');t.setAttribute('aria-hidden','true');if(markSeen){state.stage5TourSeen=true;save()}}
 function initStage5Tour(){const n=$('#stage5TourNext'),s=$('#stage5TourSkip');if(n&&!n._tourBound){n._tourBound=true;n.addEventListener('click',ev=>{ev.stopPropagation();if(stage5TourIndex<stage5TourSteps.length-1){stage5TourIndex++;renderStage5TourStep()}else closeStage5Tour(true)})}if(s&&!s._tourBound){s._tourBound=true;s.addEventListener('click',ev=>{ev.stopPropagation();closeStage5Tour(true)})}}
 
+let stage6TourIndex=0,stage6TourActive=false,stage6TourTarget=null;
+const stage6TourSteps=[
+  {target:()=>$('.goal'),kicker:'第 6 關｜新規則',title:'妞妞搬家日',text:'這關要依序完成 3 個搬家位置：玩具球 → 小睡墊 → 妞妞小屋。開場不會直接送這 3 種任務物件，要自己合成。'},
+  {target:()=>document.querySelector('.stage6-target'),kicker:'步驟 2',title:'先做好，再搬進指定格',text:'搬家格不能直接放新物件，也不能用萬能爪。請先在其他格合成出正確物件，再使用「移動」把它搬進對應位置。'},
+  {target:()=>document.querySelector('.tool[data-tool="move"]'),kicker:'步驟 3',title:'只有 4 次移動',text:'3 個任務至少需要 3 次移動，額外只留 1 次失誤空間，而且一定要照玩具球 → 小睡墊 → 妞妞小屋的順序完成。'}
+];
+function clearStage6TourFocus(){if(stage6TourTarget){stage6TourTarget.classList.remove('tour-focus');stage6TourTarget=null}const s=$('#stage6TourSpotlight');if(s)s.style.display='none'}
+function positionStage6TourCard(target){
+  const card=$('#stage6TourCard'),spot=$('#stage6TourSpotlight');if(!card)return;
+  const desktop=window.innerWidth>=721,margin=desktop?8:10,gap=desktop?8:12,rect=target?target.getBoundingClientRect():null;
+  const cardW=Math.min(desktop?286:320,window.innerWidth-(desktop?24:20));card.style.width=`${cardW}px`;
+  if(spot&&rect){const pad=desktop?5:6;spot.style.display='block';spot.style.left=`${Math.max(4,rect.left-pad)}px`;spot.style.top=`${Math.max(4,rect.top-pad)}px`;spot.style.width=`${Math.min(window.innerWidth-8,rect.width+pad*2)}px`;spot.style.height=`${Math.min(window.innerHeight-8,rect.height+pad*2)}px`;spot.style.borderRadius='18px'}
+  requestAnimationFrame(()=>{const cardH=card.getBoundingClientRect().height;let left=(window.innerWidth-cardW)/2,top=(window.innerHeight-cardH)/2;if(rect){const above=rect.top-cardH-gap,below=rect.bottom+gap;if(above>=margin)top=above;else if(below+cardH<=window.innerHeight-margin)top=below;left=rect.left+(rect.width-cardW)/2;left=Math.max(margin,Math.min(window.innerWidth-cardW-margin,left))}card.style.left=`${Math.round(left)}px`;card.style.top=`${Math.round(Math.max(margin,Math.min(window.innerHeight-cardH-margin,top)))}px`})
+}
+function renderStage6TourStep(){const step=stage6TourSteps[stage6TourIndex];if(!step)return;clearStage6TourFocus();$('#stage6TourKicker').textContent=step.kicker;$('#stage6TourTitle').textContent=step.title;$('#stage6TourText').textContent=step.text;$('#stage6TourNext').textContent=stage6TourIndex===stage6TourSteps.length-1?'開始搬家':'下一步';$('#stage6TourSkip').textContent=stage6TourIndex===stage6TourSteps.length-1?'返回':'稍後再看';$('#stage6TourDots').innerHTML=stage6TourSteps.map((_,i)=>`<span class="tour-dot ${i===stage6TourIndex?'active':''}"></span>`).join('');const target=step.target?step.target():null;stage6TourTarget=target;if(target)target.classList.add('tour-focus');positionStage6TourCard(target)}
+function startStage6Tour(force=false){initStage6Tour();if(state.stage!==5)return;if(state.stage6TourSeen&&!force)return;const t=$('#stage6Tour');if(!t)return;stage6TourActive=true;stage6TourIndex=0;t.classList.add('show');t.setAttribute('aria-hidden','false');renderStage6TourStep()}
+function closeStage6Tour(markSeen=true){const t=$('#stage6Tour');if(!t)return;clearStage6TourFocus();stage6TourActive=false;t.classList.remove('show');t.setAttribute('aria-hidden','true');if(markSeen){state.stage6TourSeen=true;save()}}
+function initStage6Tour(){const n=$('#stage6TourNext'),s=$('#stage6TourSkip');if(n&&!n._tourBound){n._tourBound=true;n.addEventListener('click',ev=>{ev.stopPropagation();if(stage6TourIndex<stage6TourSteps.length-1){stage6TourIndex++;renderStage6TourStep()}else closeStage6Tour(true)})}if(s&&!s._tourBound){s._tourBound=true;s.addEventListener('click',ev=>{ev.stopPropagation();closeStage6Tour(true)})}}
+
 function resetForStage(stageNo){
   stopBgm();
   // BETA 關卡切換必須優先把所有教學與彈窗關閉，避免透明遮罩吃掉點擊。
@@ -2525,6 +2545,7 @@ function resetForStage(stageNo){
   stage3TourActive=false;stage3TourTarget=null;
   stage4TourActive=false;stage4TourTarget=null;
   stage5TourActive=false;stage5TourTarget=null;
+  stage6TourActive=false;stage6TourTarget=null;
   const keepSound=state.sound,keepMusic=state.music;
   const common={
     board:Array(36).fill(null),bestCombo:0,bestChain:0,next:0,sound:keepSound,music:keepMusic,won:false,
@@ -2553,7 +2574,7 @@ function resetForStage(stageNo){
   else if(stageNo===2){state.stage3TourSeen=true;save();render();setTimeout(()=>{state.stage3TourSeen=false;save();startStage3Tour(true)},260)}
   else if(stageNo===3){state.stage4TourSeen=true;save();render();setTimeout(()=>{state.stage4TourSeen=false;save();startStage4Tour(true)},260)}
   else if(stageNo===4){state.stage5TourSeen=true;save();render();setTimeout(()=>{state.stage5TourSeen=false;save();startStage5Tour(true)},260)}
-  else if(stageNo===5){render();setTimeout(()=>toast('📦 第 6 關：開場不送任務物件，依序合成玩具球、小睡墊、妞妞小屋，用 4 次移動完成搬家'),260)}
+  else if(stageNo===5){state.stage6TourSeen=true;save();render();setTimeout(()=>{state.stage6TourSeen=false;save();startStage6Tour(true)},260)}
   if(state.music)startBgm();
   updateStageSwitcher();
 }
@@ -2915,7 +2936,8 @@ $('#continueBtn').onclick=()=>{
     state.board=stage6SeedBoard();
     activeTool=null;moveSource=null;lastPlaced=-1;lastMerged=-1;
     ensureStage6Setup();rollNext();save();render();
-    toast('📦 第 6 關開始！開場只有草地和石頭；請依序完成玩具球、小睡墊、妞妞小屋，共有 4 次移動');
+    toast('📦 第 6 關開始！先看搬家導覽，接著就直接在這張棋盤完成任務');
+    setTimeout(()=>startStage6Tour(true),320);
     return;
   }
 
@@ -3059,6 +3081,20 @@ if(state.pendingStage2Start){
   </div>
 </div>
 
+<div class="stage2-tour" id="stage6Tour" aria-hidden="true">
+  <div class="tour-shade"></div><div class="tour-spotlight" id="stage6TourSpotlight"></div>
+  <div class="tour-card" id="stage6TourCard" role="dialog" aria-modal="true" aria-labelledby="stage6TourTitle">
+    <div class="tour-kicker" id="stage6TourKicker">第 6 關導覽</div>
+    <div class="tour-title" id="stage6TourTitle">妞妞搬家日</div>
+    <div class="tour-text" id="stage6TourText"></div>
+    <div class="tour-dots" id="stage6TourDots"></div>
+    <div class="tour-actions">
+      <button type="button" class="tour-skip" id="stage6TourSkip">稍後再看</button>
+      <button type="button" class="tour-next" id="stage6TourNext">下一步</button>
+    </div>
+  </div>
+</div>
+
 <div class="stage-switcher" id="stageSwitcher" aria-label="測試關卡切換">
   <button type="button" data-stage="0" onclick="window.__betaSwitchStage&&window.__betaSwitchStage(0);return false;">第 1 關</button>
   <button type="button" data-stage="1" onclick="window.__betaSwitchStage&&window.__betaSwitchStage(1);return false;">第 2 關</button>
@@ -3071,7 +3107,6 @@ if(state.pendingStage2Start){
 
 <script>
 window.addEventListener('DOMContentLoaded',()=>{
-  setTimeout(()=>{if(window.__betaSwitchStage)window.__betaSwitchStage(5)},80);
   const sw=document.getElementById('stageSwitcher');
   if(!sw)return;
   // 主程式已把 resetForStage 暴露成 __betaSwitchStage；這裡再做一次獨立保險綁定。
